@@ -1,6 +1,7 @@
 import pygame as pg
 from grid import Grid
 from typing import Union
+import threading
 from algrorithms import DFS
 import sys
 
@@ -11,11 +12,13 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 # TO DO
-# Create secondary thread for algorithm (better perfomance on big map)
-# Add more algoritms
-# Add random generated maze
+# Make perfomance improvements
+# Separate Render and Logic
+# Check threading and multiprocessing
+# Choose what is better
 
-class MainClass:
+
+class Sandbox:
     def __init__(self, width: int=500, height: int=500, scale: int=40):
         pg.init()
 
@@ -27,6 +30,8 @@ class MainClass:
 
         self.size = (self.width, self.height)
         self.screen = pg.display.set_mode(self.size)
+
+        self.compute_thread = threading.Thread()
 
         self.walls = []
         self.targets = []
@@ -99,6 +104,7 @@ class MainClass:
     def handle_input(self) -> Union[dict, None]:
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                self.compute_thread.join()
                 sys.exit()
 
             if event.type == pg.MOUSEBUTTONDOWN:
@@ -110,15 +116,13 @@ class MainClass:
             if event.type == pg.KEYDOWN and len(self.targets) == 2:
                 if event.key == pg.K_SPACE:
                     if not self.path:
-                        print(self.grid.matrix)
                         algorithm = DFS(self.grid.matrix)
                         start_point, end_point = self.targets
-                        self.path = algorithm.find_path(start_point=start_point, end_point=end_point)
+                        self.compute_thread.target = algorithm.find_path
+                        self.compute_thread.args = (start_point, end_point, self.path)
+                        self.compute_thread.start()
                     else:
                         self.path = []
                     
-
-
-game = MainClass()
-game.main()
-
+sandbox = Sandbox()
+sandbox.main()
