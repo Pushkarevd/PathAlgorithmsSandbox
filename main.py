@@ -19,7 +19,7 @@ GREEN = (0, 255, 0)
 
 
 class Sandbox:
-    def __init__(self, width: int=500, height: int=500, scale: int=40):
+    def __init__(self, width: int=500, height: int=500, scale: int=20):
         pg.init()
 
         self.grid = Grid(scale, width, height)
@@ -30,8 +30,6 @@ class Sandbox:
 
         self.size = (self.width, self.height)
         self.screen = pg.display.set_mode(self.size)
-
-        self.compute_thread = threading.Thread()
 
         self.walls = []
         self.targets = []
@@ -70,6 +68,9 @@ class Sandbox:
 
         x_grid, y_grid = self.grid.translate_screen_position(x, y)
         if mouse_action.get('wall'):
+            if (x_grid, y_grid) in self.targets:
+                self.targets.remove((x_grid, y_grid))
+
             if self.grid.matrix[y_grid][x_grid]:
                 self.grid.matrix[y_grid][x_grid] = 0
                 self.walls.append((x_grid, y_grid))
@@ -79,6 +80,8 @@ class Sandbox:
                 self.walls.remove((x_grid, y_grid))
 
         elif mouse_action.get('target'):
+            if (x_grid, y_grid) in self.walls:
+                self.walls.remove((x_grid, y_grid))
             if (x_grid, y_grid) in self.targets:
                 self.targets.remove((x_grid, y_grid))
             elif len(self.targets) != 2:
@@ -104,7 +107,6 @@ class Sandbox:
     def handle_input(self) -> Union[dict, None]:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                self.compute_thread.join()
                 sys.exit()
 
             if event.type == pg.MOUSEBUTTONDOWN:
@@ -118,9 +120,12 @@ class Sandbox:
                     if not self.path:
                         algorithm = DFS(self.grid.matrix)
                         start_point, end_point = self.targets
-                        self.compute_thread.target = algorithm.find_path
-                        self.compute_thread.args = (start_point, end_point, self.path)
-                        self.compute_thread.start()
+                        thread = threading.Thread(
+                            target=algorithm.find_path,
+                            args=(start_point, end_point, self.path),
+                            daemon=True
+                        )
+                        thread.start()
                     else:
                         self.path = []
                     

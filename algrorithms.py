@@ -9,7 +9,7 @@ class AlgorithmBase(ABC):
         self.matrix = matrix
 
     # Use this function for all algorithms
-    def find_path(self, start_point: tuple, end_point: tuple) -> Union[list, None]:
+    def find_path(self, start_point: tuple, end_point: tuple, path: list) -> Union[list, None]:
         pass
 
 class DFS(AlgorithmBase):
