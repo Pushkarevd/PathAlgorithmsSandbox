@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Union
+import sys
 
 
 class AlgorithmBase(ABC):
@@ -23,7 +24,7 @@ class DFS(AlgorithmBase):
                                  [(x - 1, y), (x + 1, y), (x, y + 1), (x, y - 1)]))
         return neighbours  
     
-    def find_path(self, start_point: tuple, end_point: tuple) -> list:
+    def find_path(self, start_point: tuple, end_point: tuple, path: list) -> list:
         visited = []
         stack = [start_point]
         path_map = {}
@@ -41,12 +42,11 @@ class DFS(AlgorithmBase):
 
                     if neighbour == end_point:
                         curr = end_point
-                        path = []
                         while curr != start_point:
-                            path.append(curr)
+                            if curr != end_point:
+                                path.append(curr)
                             curr = path_map[curr]
-                        return path[1:]
-
+                        sys.exit()
             visited.append(stack.pop(0))
         return []
                             
